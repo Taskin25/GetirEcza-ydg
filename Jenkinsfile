@@ -3,13 +3,22 @@ pipeline {
 
   stages {
     stage('Checkout') {
-      steps { checkout scm }
+      steps {
+        checkout scm
+      }
     }
 
-    stage('Docker var mı?') {
+    stage('Docker Build & Up') {
       steps {
-        bat 'docker --version'
-        bat 'docker compose version'
+        bat 'docker compose down --remove-orphans'
+        bat 'docker compose build'
+        bat 'docker compose up -d'
+      }
+    }
+
+    stage('Container Status') {
+      steps {
+        bat 'docker compose ps'
       }
     }
   }
