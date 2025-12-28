@@ -1,17 +1,16 @@
 pipeline {
-    agent any
+  agent any
 
-    stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
-
-        stage('Test') {
-            steps {
-                echo 'Jenkinsfile bulundu ve pipeline çalıştı ✅'
-            }
-        }
+  stages {
+    stage('Checkout') {
+      steps { checkout scm }
     }
+
+    stage('Docker var mı?') {
+      steps {
+        bat 'docker --version'
+        bat 'docker compose version'
+      }
+    }
+  }
 }
