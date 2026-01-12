@@ -91,7 +91,7 @@ stage('5- Run System on Docker Containers') {
           bat '''
 mvn -B ^
   "-Dtest=internetprog.GetirEcza.selenium.S1_AdminUrunEkleSilTest" ^
-  "-DAPP_BASE_URL=http://localhost:3000" ^
+  "-DAPP_BASE_URL=http://frontend" ^
   "-DSELENIUM_REMOTE_URL=http://localhost:4444/wd/hub" ^
   test
 '''
@@ -106,7 +106,7 @@ mvn -B ^
           bat '''
 mvn -B ^
   "-Dtest=internetprog.GetirEcza.selenium.S2_UserSepeteEkleTest" ^
-  "-DAPP_BASE_URL=http://localhost:3000" ^
+  "-DAPP_BASE_URL=http://frontend" ^
   "-DSELENIUM_REMOTE_URL=http://localhost:4444/wd/hub" ^
   test
 '''
@@ -121,7 +121,7 @@ mvn -B ^
           bat '''
 mvn -B ^
   "-Dtest=internetprog.GetirEcza.selenium.S3_FavoriYorumTest" ^
-  "-DAPP_BASE_URL=http://localhost:3000" ^
+  "-DAPP_BASE_URL=http://frontend" ^
   "-DSELENIUM_REMOTE_URL=http://localhost:4444/wd/hub" ^
   test
 '''
