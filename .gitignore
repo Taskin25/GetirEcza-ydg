@@ -14,3 +14,7 @@ frontend/build/
 # OS
 .DS_Store
 Thumbs.db
+
+**/target/
+node_modules/
+

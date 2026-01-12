@@ -8,43 +8,69 @@ export const AuthProvider = ({ children }) => {
   const [adminGirisi, setAdminGirisi] = useState(false);
   const [sonGirisTipi, setSonGirisTipi] = useState(null); // 'kullanici' | 'admin'
 
-  useEffect(() => {
+  const syncFromStorage = () => {
     const admin = localStorage.getItem('adminGirisi') === 'true';
     const kullanici = localStorage.getItem('kullaniciGirisi') === 'true';
     const tip = localStorage.getItem('sonGirisTipi');
     setAdminGirisi(admin);
     setKullaniciGirisi(kullanici);
     setSonGirisTipi(tip);
+  };
+
+  useEffect(() => {
+    syncFromStorage();
+
+    // (Opsiyonel ama stabil) başka sekmede login/logout olursa state güncellensin
+    const onStorage = (e) => {
+      if (!e.key) return;
+      const keys = ['adminGirisi', 'kullaniciGirisi', 'sonGirisTipi', 'token', 'kullaniciId'];
+      if (keys.includes(e.key)) syncFromStorage();
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
   }, []);
 
   const girisYap = async ({ email, sifre }) => {
     try {
+      // ✅ önce eski flag’leri temizle (admin->user / user->admin geçişi sorunsuz)
+      localStorage.removeItem('adminGirisi');
+      localStorage.removeItem('kullaniciGirisi');
+      localStorage.removeItem('sonGirisTipi');
+      setAdminGirisi(false);
+      setKullaniciGirisi(false);
+      setSonGirisTipi(null);
+
       const response = await api.post('/auth/login', { email, sifre });
 
-      const token = response.data.token;
-      const role = response.data.role || response.data.rol;
-      const { kullaniciId, email: kullaniciEmail } = response.data;
+      const token = response?.data?.token;
+      const role = response?.data?.role || response?.data?.rol;
+
+      const kullaniciId =
+          response?.data?.kullaniciId ??
+          response?.data?.userId ??
+          response?.data?.id;
+
+      const kullaniciEmail = response?.data?.email ?? email;
 
       if (!token || !role) throw new Error('Token veya rol eksik');
 
-      //  Token ve kullanıcı bilgilerini kaydet
+      // ✅ Token ve kullanıcı bilgilerini kaydet
       localStorage.setItem('token', token);
-      localStorage.setItem('kullaniciId', kullaniciId);
+      if (kullaniciId !== undefined && kullaniciId !== null) {
+        localStorage.setItem('kullaniciId', String(kullaniciId));
+      }
       localStorage.setItem('email', kullaniciEmail);
-      console.log('🔐 Token kaydedildi:', token);
 
       if (role === 'ROLE_ADMIN') {
         localStorage.setItem('adminGirisi', 'true');
+        localStorage.setItem('sonGirisTipi', 'admin');
         setAdminGirisi(true);
         setSonGirisTipi('admin');
-        localStorage.setItem('sonGirisTipi', 'admin');
-        console.log('🛡️ Admin girişi yapıldı');
       } else {
         localStorage.setItem('kullaniciGirisi', 'true');
+        localStorage.setItem('sonGirisTipi', 'kullanici');
         setKullaniciGirisi(true);
         setSonGirisTipi('kullanici');
-        localStorage.setItem('sonGirisTipi', 'kullanici');
-        console.log('🙋 Kullanıcı girişi yapıldı');
       }
     } catch (error) {
       console.error('❌ Giriş hatası:', error);
@@ -55,7 +81,6 @@ export const AuthProvider = ({ children }) => {
   const cikisYap = () => {
     const tip = localStorage.getItem('sonGirisTipi');
 
-    //  Çıkış yaparken tüm localStorage verilerini temizle
     localStorage.removeItem('token');
     localStorage.removeItem('kullaniciId');
     localStorage.removeItem('email');
@@ -67,26 +92,21 @@ export const AuthProvider = ({ children }) => {
     setAdminGirisi(false);
     setSonGirisTipi(null);
 
-    // Yönlendirme
-    if (tip === 'admin') {
-      window.location.href = '/admin';
-    } else {
-      window.location.href = '/giris';
-    }
+    window.location.href = tip === 'admin' ? '/admin' : '/giris';
   };
 
   return (
-    <AuthContext.Provider
-      value={{
-        kullaniciGirisi,
-        adminGirisi,
-        sonGirisTipi,
-        girisYap,
-        cikisYap,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+      <AuthContext.Provider
+          value={{
+            kullaniciGirisi,
+            adminGirisi,
+            sonGirisTipi,
+            girisYap,
+            cikisYap,
+          }}
+      >
+        {children}
+      </AuthContext.Provider>
   );
 };
 
