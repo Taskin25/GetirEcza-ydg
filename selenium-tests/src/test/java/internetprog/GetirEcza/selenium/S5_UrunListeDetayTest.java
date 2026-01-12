@@ -12,28 +12,19 @@ public class S5_UrunListeDetayTest extends BaseUiTest {
 
     @Test
     void urunListesiVeDetayAciliyorMu() {
-        // ✅ Anasayfa
-        driver.get(appBaseUrl + "/");
+        String baseUrl = System.getProperty("APP_BASE_URL", "http://frontend");
+        driver.get(baseUrl + "/");
 
-        // ✅ Ürün kartları yüklendi mi
         List<WebElement> urunKartlari =
                 driver.findElements(By.cssSelector("[data-testid='urun-karti']"));
-
         assertTrue(urunKartlari.size() > 0, "Ürün listesi boş görünüyor");
 
-        // ✅ İlk ürünün "İncele" linkine tıkla
         WebElement inceleLink =
                 urunKartlari.get(0).findElement(By.cssSelector("a"));
-
         inceleLink.click();
 
-        // ✅ Ürün detay sayfasında başlık var mı
         WebElement baslik =
                 driver.findElement(By.cssSelector("[data-testid='urun-baslik']"));
-
-        assertTrue(
-                baslik.getText() != null && !baslik.getText().isBlank(),
-                "Ürün başlığı boş"
-        );
+        assertTrue(baslik.getText() != null && !baslik.getText().isBlank(), "Ürün başlığı boş");
     }
 }
