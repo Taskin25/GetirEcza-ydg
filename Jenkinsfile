@@ -43,31 +43,31 @@ pipeline {
     // bunu pom'da ayrı profile ile ayırmak en temiz yol.)
     // stage('4- Integration Tests') { ... }  // şimdilik kaldırdım
 
-    stage('5- Run System on Docker Containers') {
-      steps {
-       bat 'docker compose up -d --build'
+stage('5- Run System on Docker Containers') {
+  steps {
+    bat 'docker compose up -d --build'
 
-       bat """
-       powershell -NoProfile -ExecutionPolicy Bypass -Command "& {
-         \$ErrorActionPreference = 'SilentlyContinue'
-         \$url = 'http://localhost:8082/api/urunler'
-         for(\$i=1; \$i -le 60; \$i++){
-           try {
-             \$r = Invoke-WebRequest -UseBasicParsing -TimeoutSec 2 \$url
-             if(\$r.StatusCode -ge 200 -and \$r.StatusCode -lt 500){
-               Write-Host ('System is up: ' + \$r.StatusCode)
-               exit 0
-             }
-           } catch {}
-           Start-Sleep -Seconds 2
-         }
-         Write-Host 'System did not become ready in time'
-         exit 1
-       }"
-       """
+    powershell '''
+      $ErrorActionPreference = "SilentlyContinue"
+      $url = "http://localhost:8082/api/urunler"
 
+      for ($i = 1; $i -le 60; $i++) {
+        try {
+          $r = Invoke-WebRequest -UseBasicParsing -TimeoutSec 2 $url
+          if ($r.StatusCode -ge 200 -and $r.StatusCode -lt 500) {
+            Write-Host "System is up: $($r.StatusCode)"
+            exit 0
+          }
+        } catch {}
+        Start-Sleep -Seconds 2
       }
-    }
+
+      Write-Host "System did not become ready in time"
+      exit 1
+    '''
+  }
+}
+
 
     // ✅ 5'ten sonra System IT koşulur.
     // DİKKAT: senin docker ps çıktında backend host portu 8082 idi (8082 -> 8081).
