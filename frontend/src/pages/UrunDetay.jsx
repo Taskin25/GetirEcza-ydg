@@ -142,7 +142,8 @@ export default function UrunDetay() {
           <div>
             <div className="flex justify-between items-start mb-4">
               <div>
-                <h1 className="text-3xl font-bold text-gray-800 mb-2">{urun.ad}</h1>
+                <h1 className="text-3xl font-bold text-gray-800 mb-2"  data-testid="urun-baslik"
+                >{urun.ad}</h1>
                 <p className="text-red-600 text-xl font-bold">₺{fiyat.toFixed(2)}</p>
               </div>
 

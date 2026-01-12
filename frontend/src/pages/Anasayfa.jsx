@@ -170,7 +170,8 @@ export default function Anasayfa() {
                 <div
                     key={urun.id}
                     className="border rounded-lg shadow hover:shadow-lg overflow-hidden"
-                    data-testid={`urun-${urun.id}`}
+                    data-testid="urun-karti"
+                    data-urun-id={urun.id}
                 >
                   <img
                       src={urun.gorselUrl}
@@ -198,7 +199,7 @@ export default function Anasayfa() {
                       <button
                           data-testid={`urun-${urun.id}-sepete-ekle`}
                           onClick={() => {
-                            sepeteEkle(urun);
+                            handleSepeteEkle(urun);
                             navigate('/sepet');   // ✅ TESTİN BEKLEDİĞİ ŞEY
                           }}
                           className="text-sm text-white bg-red-500 hover:bg-red-600 px-3 py-2 rounded"
