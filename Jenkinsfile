@@ -129,6 +129,22 @@ mvn -B ^
       }
       post { always { junit 'selenium-tests/target/surefire-reports/*.xml' } }
     }
+
+    stage('6.4- Selenium Scenario #4 (Sayfalar açılıyor mu)') {
+      steps {
+        dir('selenium-tests') {
+          bat '''
+    mvn -B ^
+      "-Dtest=internetprog.GetirEcza.selenium.S4_SayfalarAciliyorTest" ^
+      "-DAPP_BASE_URL=http://frontend" ^
+      "-DSELENIUM_REMOTE_URL=http://localhost:4444/wd/hub" ^
+      test
+    '''
+        }
+      }
+      post { always { junit 'selenium-tests/target/surefire-reports/*.xml' } }
+    }
+
   }
 
   post {
