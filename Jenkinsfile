@@ -45,24 +45,27 @@ pipeline {
 
     stage('5- Run System on Docker Containers') {
       steps {
-        bat 'docker compose up -d --build'
+       bat 'docker compose up -d --build'
 
-        // ✅ Sistem hazır olana kadar bekle (frontend/nginx üzerinden)
-        bat '''
-powershell -NoProfile -Command ^
-  "$ErrorActionPreference='SilentlyContinue'; ^
-   $url='http://localhost:3000/api/urunler'; ^
-   for($i=1;$i -le 60;$i++){ ^
-     try { ^
-       $r = Invoke-WebRequest -UseBasicParsing -TimeoutSec 2 $url; ^
-       if($r.StatusCode -ge 200 -and $r.StatusCode -lt 500){ ^
-         Write-Host 'System is up:' $r.StatusCode; exit 0 ^
-       } ^
-     } catch {} ^
-     Start-Sleep -Seconds 2 ^
-   }; ^
-   Write-Host 'System did not become ready in time'; exit 1"
-'''
+       bat """
+       powershell -NoProfile -ExecutionPolicy Bypass -Command "& {
+         \$ErrorActionPreference = 'SilentlyContinue'
+         \$url = 'http://localhost:8082/api/urunler'
+         for(\$i=1; \$i -le 60; \$i++){
+           try {
+             \$r = Invoke-WebRequest -UseBasicParsing -TimeoutSec 2 \$url
+             if(\$r.StatusCode -ge 200 -and \$r.StatusCode -lt 500){
+               Write-Host ('System is up: ' + \$r.StatusCode)
+               exit 0
+             }
+           } catch {}
+           Start-Sleep -Seconds 2
+         }
+         Write-Host 'System did not become ready in time'
+         exit 1
+       }"
+       """
+
       }
     }
 
