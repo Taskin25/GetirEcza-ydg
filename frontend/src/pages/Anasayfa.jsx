@@ -170,8 +170,8 @@ export default function Anasayfa() {
                 <div
                     key={urun.id}
                     className="border rounded-lg shadow hover:shadow-lg overflow-hidden"
-                    data-testid="urun-karti"
-                    data-urun-id={urun.id}
+                    data-testid={`urun-karti-${urun.id}`}
+
                 >
                   <img
                       src={urun.gorselUrl}

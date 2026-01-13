@@ -2,6 +2,13 @@ pipeline {
   agent any
 
   stages {
+
+    stage('0- Clean Workspace') {
+      steps {
+        deleteDir()
+      }
+    }
+
     stage('1- Checkout (GitHub)') {
       steps {
         checkout scm
@@ -30,10 +37,9 @@ pipeline {
           bat 'mvn -B test'
         }
       }
-      // ✅ BURASI KALSIN (backend unit)
       post {
         always {
-          junit testResults: 'backend/target/surefire-reports/*.xml'
+          junit 'backend/target/surefire-reports/*.xml'
         }
       }
     }
@@ -69,15 +75,21 @@ pipeline {
           bat 'mvn -B test "-Dtest=internetprog.GetirEcza.system.UrunSystemIT" "-DAPP_API_BASE=http://localhost:8082"'
         }
       }
-      // ✅ BURASI KALSIN (system test raporu)
       post {
         always {
-          junit testResults: 'backend/target/surefire-reports/*.xml'
+          junit 'backend/target/surefire-reports/*.xml'
         }
       }
     }
 
-    // ✅ Selenium: rapor alma stage'lerde YOK!
+    stage('6.0- Cleanup Selenium Reports') {
+      steps {
+        dir('selenium-tests') {
+          bat 'mvn -B clean'
+        }
+      }
+    }
+
     stage('6.1- Selenium Scenario #1 (Admin ürün ekle & sil)') {
       steps {
         dir('selenium-tests') {
@@ -90,6 +102,7 @@ mvn -B ^
 '''
         }
       }
+      post { always { junit 'selenium-tests/target/surefire-reports/*.xml' } }
     }
 
     stage('6.2- Selenium Scenario #2 (User sepete ekle)') {
@@ -104,6 +117,7 @@ mvn -B ^
 '''
         }
       }
+      post { always { junit 'selenium-tests/target/surefire-reports/*.xml' } }
     }
 
     stage('6.3- Selenium Scenario #3 (Favori & yorum)') {
@@ -118,6 +132,7 @@ mvn -B ^
 '''
         }
       }
+      post { always { junit 'selenium-tests/target/surefire-reports/*.xml' } }
     }
 
     stage('6.4- Selenium Scenario #4 (Sayfalar açılıyor mu)') {
@@ -132,16 +147,14 @@ mvn -B ^
 '''
         }
       }
+      post { always { junit 'selenium-tests/target/surefire-reports/*.xml' } }
     }
   }
 
   post {
     always {
-      // ✅ Selenium raporunu SADECE 1 kere burada al
-      junit testResults: 'selenium-tests/target/surefire-reports/*.xml', allowEmptyResults: true
-
-      // ✅ her zaman kapat
       bat 'docker compose down -v'
     }
   }
 }
+    
