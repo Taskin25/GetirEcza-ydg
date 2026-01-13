@@ -3,8 +3,8 @@ package internetprog.GetirEcza.selenium;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.support.ui.WebDriverWait;
 import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.time.Duration;
 import java.util.List;
@@ -18,31 +18,28 @@ public class S5_UrunListeDetayTest extends BaseUiTest {
         String baseUrl = System.getProperty("APP_BASE_URL", "http://frontend");
         driver.get(baseUrl + "/");
 
-        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(30));
 
-        // ✅ ürün kartları gelsin
+        // ✅ Ürün kartları gelene kadar bekle (senin UI'da kartın data-testid'si bu)
         wait.until(ExpectedConditions.numberOfElementsToBeMoreThan(
-                By.cssSelector("[data-testid^='urun-']"), 0
+                By.cssSelector("[data-testid='urun-karti']"), 0
         ));
 
-        List<WebElement> urunKartlari =
-                driver.findElements(By.cssSelector("[data-testid^='urun-']"));
+        List<WebElement> kartlar = driver.findElements(By.cssSelector("[data-testid='urun-karti']"));
+        assertTrue(kartlar.size() > 0, "Ürün listesi boş görünüyor");
 
-        assertTrue(urunKartlari.size() > 0, "Ürün listesi boş görünüyor");
+        WebElement ilkKart = kartlar.get(0);
 
-        // ✅ ilk ürünün incele linkine tıkla
-        WebElement inceleLink =
-                urunKartlari.get(0).findElement(By.cssSelector("a"));
+        // ✅ İlk kartın içindeki "İncele" linkini bul (data-testid ...-incele)
+        WebElement inceleLink = ilkKart.findElement(By.cssSelector("[data-testid$='-incele']"));
         inceleLink.click();
 
-        // ✅ detay sayfasında başlık gelsin
+        // ✅ Detay sayfasında başlık gelsin
         wait.until(ExpectedConditions.visibilityOfElementLocated(
                 By.cssSelector("[data-testid='urun-baslik']")
         ));
 
-        WebElement baslik =
-                driver.findElement(By.cssSelector("[data-testid='urun-baslik']"));
-
+        WebElement baslik = driver.findElement(By.cssSelector("[data-testid='urun-baslik']"));
         assertTrue(!baslik.getText().isBlank(), "Ürün başlığı boş");
     }
 }
