@@ -30,6 +30,7 @@ pipeline {
           bat 'mvn -B test'
         }
       }
+      // ✅ BURASI KALSIN (backend unit)
       post {
         always {
           junit testResults: 'backend/target/surefire-reports/*.xml'
@@ -37,46 +38,38 @@ pipeline {
       }
     }
 
-    // ⚠️ Burada "verify" koşturma.
-    // Çünkü UrunSystemIT gibi sistem testlerin HTTP ile canlı backend ister.
-    // (ControllerIT vs. gibi Testcontainers IT'lerin varsa ve onları burada koşturmak istiyorsan,
-    // bunu pom'da ayrı profile ile ayırmak en temiz yol.)
-    // stage('4- Integration Tests') { ... }  // şimdilik kaldırdım
+    stage('5- Run System on Docker Containers') {
+      steps {
+        bat 'docker compose up -d --build'
 
-stage('5- Run System on Docker Containers') {
-  steps {
-    bat 'docker compose up -d --build'
+        powershell '''
+          $ErrorActionPreference = "SilentlyContinue"
+          $url = "http://localhost:8082/api/urunler"
 
-    powershell '''
-      $ErrorActionPreference = "SilentlyContinue"
-      $url = "http://localhost:8082/api/urunler"
-
-      for ($i = 1; $i -le 60; $i++) {
-        try {
-          $r = Invoke-WebRequest -UseBasicParsing -TimeoutSec 2 $url
-          if ($r.StatusCode -ge 200 -and $r.StatusCode -lt 500) {
-            Write-Host "System is up: $($r.StatusCode)"
-            exit 0
+          for ($i = 1; $i -le 60; $i++) {
+            try {
+              $r = Invoke-WebRequest -UseBasicParsing -TimeoutSec 2 $url
+              if ($r.StatusCode -ge 200 -and $r.StatusCode -lt 500) {
+                Write-Host "System is up: $($r.StatusCode)"
+                exit 0
+              }
+            } catch {}
+            Start-Sleep -Seconds 2
           }
-        } catch {}
-        Start-Sleep -Seconds 2
+
+          Write-Host "System did not become ready in time"
+          exit 1
+        '''
       }
+    }
 
-      Write-Host "System did not become ready in time"
-      exit 1
-    '''
-  }
-}
-
-
-    // ✅ 5'ten sonra System IT koşulur.
-    // DİKKAT: senin docker ps çıktında backend host portu 8082 idi (8082 -> 8081).
     stage('5.1- System Tests (Backend HTTP)') {
       steps {
         dir('backend') {
           bat 'mvn -B test "-Dtest=internetprog.GetirEcza.system.UrunSystemIT" "-DAPP_API_BASE=http://localhost:8082"'
         }
       }
+      // ✅ BURASI KALSIN (system test raporu)
       post {
         always {
           junit testResults: 'backend/target/surefire-reports/*.xml'
@@ -84,7 +77,7 @@ stage('5- Run System on Docker Containers') {
       }
     }
 
-    // ✅ Selenium testleri host'tan koşuyor, bu yüzden APP_BASE_URL localhost olmalı.
+    // ✅ Selenium: rapor alma stage'lerde YOK!
     stage('6.1- Selenium Scenario #1 (Admin ürün ekle & sil)') {
       steps {
         dir('selenium-tests') {
@@ -97,7 +90,6 @@ mvn -B ^
 '''
         }
       }
-      post { always { junit 'selenium-tests/target/surefire-reports/*.xml' } }
     }
 
     stage('6.2- Selenium Scenario #2 (User sepete ekle)') {
@@ -112,7 +104,6 @@ mvn -B ^
 '''
         }
       }
-      post { always { junit 'selenium-tests/target/surefire-reports/*.xml' } }
     }
 
     stage('6.3- Selenium Scenario #3 (Favori & yorum)') {
@@ -127,27 +118,29 @@ mvn -B ^
 '''
         }
       }
-      post { always { junit 'selenium-tests/target/surefire-reports/*.xml' } }
     }
 
     stage('6.4- Selenium Scenario #4 (Sayfalar açılıyor mu)') {
       steps {
         dir('selenium-tests') {
           bat '''
-    mvn -B ^
-      "-Dtest=internetprog.GetirEcza.selenium.S4_SayfalarAciliyorTest" ^
-      "-DAPP_BASE_URL=http://frontend" ^
-      "-DSELENIUM_REMOTE_URL=http://localhost:4444/wd/hub" ^
-      test
-    '''
+mvn -B ^
+  "-Dtest=internetprog.GetirEcza.selenium.S4_SayfalarAciliyorTest" ^
+  "-DAPP_BASE_URL=http://frontend" ^
+  "-DSELENIUM_REMOTE_URL=http://localhost:4444/wd/hub" ^
+  test
+'''
         }
       }
-      post { always { junit 'selenium-tests/target/surefire-reports/*.xml' } }
     }
   }
 
   post {
     always {
+      // ✅ Selenium raporunu SADECE 1 kere burada al
+      junit testResults: 'selenium-tests/target/surefire-reports/*.xml', allowEmptyResults: true
+
+      // ✅ her zaman kapat
       bat 'docker compose down -v'
     }
   }
